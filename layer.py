@@ -1,7 +1,11 @@
 class Layer():
-	def __init__(self, neurons, bias):
+	def __init__(self, neurons, bias, index):
+		assert neurons is not None and len(neurons) > 0, 'Must have at least 1 neuron per layer'
+		assert index > 0, 'Layer index must be greater than 0'
+
 		self._neurons = neurons
 		self._bias = bias
+		self._name = 'Layer ' + str(index)
 
 	def next(self, inputs):
 		outputs = []
@@ -37,9 +41,13 @@ class Layer():
 
 		self._bias.update_weights(changes[-1])
 
+	def __str__(self):
+		return self._name
+
 class OutputLayer(Layer):
 	def __init__(self, neurons):
 		self._neurons = neurons
+		self._name = 'Output Layer'
 
 	def next(self, inputs):
 		outputs = []

@@ -4,59 +4,42 @@ import random, math
 import cPickle as pickle
 
 class NeuralNetwork():
-	def __init__(self, neurons_per_layer):
-
-		assert len(neurons_per_layer) >= 2, 'Must have at least one input layer and one output layer'
+	def __init__(self, neurons_per_layer, function='logistic'):
+		assert neurons_per_layer is not None and len(neurons_per_layer) >= 2, 'Must have at least one input layer and one output layer'
 		assert neurons_per_layer[0] > 0, 'Must have at least one input neuron'
 		assert neurons_per_layer[-1] > 0, 'Must have at least one output neuron'
 
 		self._neurons_per_layer = neurons_per_layer
 		self._layers = []
 
-		input_layer = self._create_inputs(neurons_per_layer[0], neurons_per_layer[1], 'logistic')
+		input_layer = self._create_inputs(neurons_per_layer[0], neurons_per_layer[1], 'identity')
 
 		self._layers.append(input_layer)
 
-		hidden_layers = self._create_hidden(neurons_per_layer[1:-1], neurons_per_layer[-1], 'logistic')
+		hidden_layers = self._create_hidden(neurons_per_layer[1:-1], neurons_per_layer[-1], function)
 
 		self._layers += hidden_layers
 
-		output_layer = self._create_output(neurons_per_layer[-1])
+		output_layer = self._create_output(neurons_per_layer[-1], function)
 
 		self._layers.append(output_layer)
-
-	# def __init__(self, layers, neurons, weights)
 
 	def _create_inputs(self, num_inputs, input_neuron_connections, neuron_activation_function):
 		input_neurons = []
 
-		i1 = Neuron([0.15, 0.25], 'linear')
-		i2 = Neuron([0.2, 0.3], 'linear')
-		b = Neuron([0.35, 0.35], 'linear')
-
-		return Layer([i1, i2], b)
-
 		for i in range(num_inputs):
 			connection_weights = self._create_weights(input_neuron_connections)
 
-			input_neuron = Neuron(connection_weights, neuron_activation_function)
+			input_neuron = Neuron(connection_weights, neuron_activation_function, i + 1, 1)
 			input_neurons.append(input_neuron)
 
 		connection_weights = self._create_weights(input_neuron_connections)
-		input_bias = Neuron(connection_weights, 'linear')
+		input_bias = Neuron(connection_weights, 'identity', num_inputs + 1, 1)
 
-		return Layer(input_neurons, input_bias)
+		return Layer(input_neurons, input_bias, 1)
 
 	def _create_hidden(self, hidden_neurons_per_layer, num_outputs, neuron_activation_function):
 		layers = []
-
-		h1 = Neuron([0.4, 0.5], 'logistic')
-		h2 = Neuron([0.45, 0.55], 'logistic')
-		b = Neuron([0.6, 0.6], 'linear')
-
-		layer = Layer([h1, h2], b)
-
-		return [layer]
 
 		num_hidden_layers = len(hidden_neurons_per_layer)
 
@@ -70,30 +53,25 @@ class NeuralNetwork():
 
 			for j in range(hidden_neurons_per_layer[i]):
 				connection_weights = self._create_weights(connections)
-				hidden_neuron = Neuron(connection_weights, neuron_activation_function)
+				hidden_neuron = Neuron(connection_weights, neuron_activation_function, j + 1, i + 1)
 				neurons.append(hidden_neuron)
 
 			connection_weights = self._create_weights(connections)
-			bias = Neuron(connection_weights, 'linear')
+			bias = Neuron(connection_weights, 'identity', hidden_neurons_per_layer[i] + 1, i + 1)
 
-			layer = Layer(neurons, bias)
+			layer = Layer(neurons, bias, i + 1)
 
 			layers.append(layer)
 
 		return layers
 
-	def _create_output(self, num_outputs):
+	def _create_output(self, num_outputs, function):
 		neurons = []
 
-		o1 = Neuron([1], 'logistic')
-		o2 = Neuron([1], 'logistic')
-
-		layer = OutputLayer([o1, o2])
-
-		return layer
+		layer_index = len(self._neurons_per_layer)
 
 		for i in range(num_outputs):
-			output_neuron = Neuron([1], 'logistic')
+			output_neuron = Neuron([1], function, i + 1, layer_index)
 			neurons.append(output_neuron)
 
 		layer = OutputLayer(neurons)
@@ -109,20 +87,14 @@ class NeuralNetwork():
 		return weights
 
 	def run(self, current_input):
-		current_output = current_input
-
-		for layer in self._layers:
-			current_output = layer.next(current_output)
-
-		return current_output
+		return self._forward_pass(current_input)[0]
 
 	def train(self, train, targets, learning_rate):
 		for i in range(len(train)):
-			result = self.run(train[i])
-			# mean_squared_error = self._calculate_error(result, targets[i])
+			result = self._forward_pass(train[i])
 			self._back_prop(targets[i], learning_rate)
 
-	def _calculate_error(self, result, target):
+	def mean_squared_error(self, result, target):
 		errors = []
 
 		for i in range(len(target)):
@@ -130,6 +102,14 @@ class NeuralNetwork():
 			errors.append(error)
 
 		return sum(errors)
+
+	def _forward_pass(self, inputs):
+		current_output = inputs
+
+		for layer in self._layers:
+			current_output = layer.next(current_output)
+
+		return current_output
 
 	def _back_prop(self, target, learning_rate):
 		previous_derivatives = []
