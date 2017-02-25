@@ -30,15 +30,11 @@ class NeuralNetwork():
 	def _create_inputs(self, num_inputs, input_neuron_connections, neuron_activation_function):
 		input_neurons = []
 
-		# i1 = Neuron([2.478443163392183, 4.170033035328121], 'linear')
-		# i2 = Neuron([2.6371141884629057, 4.067158099543851], 'linear')
-		# b = Neuron([-1.46943580165, -2.21253713072], 'linear')
+		i1 = Neuron([0.15, 0.25], 'linear')
+		i2 = Neuron([0.2, 0.3], 'linear')
+		b = Neuron([0.35, 0.35], 'linear')
 
-		# i1 = Neuron([0.5, 0.5], 'linear')
-		# i2 = Neuron([0.5, 0.5], 'linear')
-		# b = Neuron([-0.5, -0.5], 'linear')
-
-		# return Layer([i1, i2], b)
+		return Layer([i1, i2], b)
 
 		for i in range(num_inputs):
 			connection_weights = self._create_weights(input_neuron_connections)
@@ -54,17 +50,13 @@ class NeuralNetwork():
 	def _create_hidden(self, hidden_neurons_per_layer, num_outputs, neuron_activation_function):
 		layers = []
 
-		# h1 = Neuron([3.2515611371441397], 'logistic')
-		# h2 = Neuron([6.4838883416881075], 'logistic')
-		# b = Neuron([-4.35522229224], 'linear')
+		h1 = Neuron([0.4, 0.5], 'logistic')
+		h2 = Neuron([0.45, 0.55], 'logistic')
+		b = Neuron([0.6, 0.6], 'linear')
 
-		# h1 = Neuron([0.5], 'logistic')
-		# h2 = Neuron([0.5], 'logistic')
-		# b = Neuron([-0.5], 'linear')
+		layer = Layer([h1, h2], b)
 
-		# layer = Layer([h1, h2], b)
-
-		# return [layer]
+		return [layer]
 
 		num_hidden_layers = len(hidden_neurons_per_layer)
 
@@ -93,12 +85,12 @@ class NeuralNetwork():
 	def _create_output(self, num_outputs):
 		neurons = []
 
-		# o = Neuron([1], 'logistic')
-		# bias = Neuron([0], 'linear')
+		o1 = Neuron([1], 'logistic')
+		o2 = Neuron([1], 'logistic')
 
-		# layer = Layer([o], None)
+		layer = OutputLayer([o1, o2])
 
-		# return layer
+		return layer
 
 		for i in range(num_outputs):
 			output_neuron = Neuron([1], 'logistic')
@@ -134,7 +126,7 @@ class NeuralNetwork():
 		errors = []
 
 		for i in range(len(target)):
-			error = (target[i] - result[0][i])**2 / 2
+			error = (target[i] - result[i][0])**2 / 2
 			errors.append(error)
 
 		return sum(errors)
