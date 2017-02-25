@@ -94,6 +94,69 @@ class NeuralNetwork():
 			result = self._forward_pass(train[i])
 			self._back_prop(targets[i], learning_rate)
 
+	# Stochastic gradient descent (update weights based on error of every training case)
+	def train(self, train, targets, learning_rate):
+		self._stochastic_gd(train, targets, learning_rate)
+
+	# Batch gradient descent (Update weights based on error of all training cases)
+	def train_batch(self, train, targets, learning_rate):
+		self._batch_gd(train, targets, learning_rate)
+
+	# Mini-batch gradient descent (Update weights based on error of batch_size training cases)
+	def train_mini_batch(self, train, targets, learning_rate, batch_size):
+		self._mini_batch_gd(train, targets, learning_rate, batch_size)
+
+	def _stochastic_gd(self, train, targets, learning_rate):
+		for i in range(len(train)):
+			result = self._forward_pass(train[i])
+			self._online_back_prop(targets[i], learning_rate)
+
+	def _batch_gd(self, train, targets, learning_rate):
+		layer_changes = []
+
+		for i in range(len(train)):
+			result = self._forward_pass(train[i])
+
+			if layer_changes == []:
+				layer_changes = self._offline_back_prop(targets[i], learning_rate)
+			else:
+				layer_updates = self._offline_back_prop(targets[i], learning_rate)
+				
+				for l in range(len(layer_changes)):
+					for n in range(len(layer_changes[l])):
+						for w in range(len(layer_changes[l][n])):
+							layer_changes[l][n][w] += layer_updates[l][n][w]
+
+		self._update_layers(layer_changes)
+
+	def _mini_batch_gd(self, train, targets, learning_rate, batch_size):
+		layer_changes = []
+
+		iteration = 0
+
+		for i in range(len(train)):
+			result = self._forward_pass(train[i])
+
+			if iteration >= batch_size:
+				self._update_layers(layer_changes)
+				layer_changes = []
+				iteration = 0
+			
+			if layer_changes == []:
+				layer_changes = self._offline_back_prop(targets[i], learning_rate)
+			else:
+				layer_updates = self._offline_back_prop(targets[i], learning_rate)
+				
+				for l in range(len(layer_changes)):
+					for n in range(len(layer_changes[l])):
+						for w in range(len(layer_changes[l][n])):
+							layer_changes[l][n][w] += layer_updates[l][n][w]
+
+			iteration += 1
+
+		if layer_changes != []:
+			self._update_layers(layer_changes)
+
 	def mean_squared_error(self, result, target):
 		errors = []
 
@@ -110,6 +173,14 @@ class NeuralNetwork():
 			current_output = layer.next(current_output)
 
 		return current_output
+
+	def _offline_back_prop(self, target, learning_rate):
+		return self._back_prop(target, learning_rate)
+
+	def _online_back_prop(self, target, learning_rate):
+		layer_changes = self._back_prop(target, learning_rate)
+
+		self._update_layers(layer_changes)
 
 	def _back_prop(self, target, learning_rate):
 		previous_derivatives = []
@@ -171,7 +242,7 @@ class NeuralNetwork():
 
 		layer_changes.reverse()
 
-		self._update_layers(layer_changes)
+		return layer_changes
 
 	def _update_layers(self, layer_changes):
 		for i in range(len(layer_changes)):
