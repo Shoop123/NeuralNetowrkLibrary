@@ -3,6 +3,8 @@ from neuron import Neuron
 import random, math
 import cPickle as pickle
 
+# TODO update back prop so that it works with different activation function (linear and non linear)
+
 class NeuralNetwork():
 	def __init__(self, neurons_per_layer, function='logistic'):
 		assert neurons_per_layer is not None and len(neurons_per_layer) >= 2, 'Must have at least one input layer and one output layer'
@@ -20,7 +22,7 @@ class NeuralNetwork():
 
 		self._layers += hidden_layers
 
-		output_layer = self._create_output(neurons_per_layer[-1], function)
+		output_layer = self._create_output(neurons_per_layer[-1], 'identity')
 
 		self._layers.append(output_layer)
 
@@ -87,7 +89,7 @@ class NeuralNetwork():
 		return weights
 
 	def run(self, current_input):
-		return self._forward_pass(current_input)[0]
+		return self._forward_pass(current_input)
 
 	def train(self, train, targets, learning_rate):
 		for i in range(len(train)):
@@ -183,65 +185,115 @@ class NeuralNetwork():
 		self._update_layers(layer_changes)
 
 	def _back_prop(self, target, learning_rate):
+		# derivatives of the error with respect to the net input to every neuron in the layer before
 		previous_derivatives = []
 
+		# a 3d list of every weight change for every neuron in every layer
+		# 1st dimension - consists of a list of layers
+		# 2nd dimension - consists of a list of neurons in each layer
+		# 3rd dimension - consists of a list of weights in each neuron
+		# e.g. if the list is: [[[[1]], [4]], [[]]] then there are 2 layers, 
+		# the first layer has 2 neurons with 1 synapse (weight) each
+		# the second layer is the ouput layer so it doesn't have any weights
 		layer_changes = []
 
+		# go through all of the output neurons
 		for i in range(len(self._layers[-1].neurons())):
+			# get the output of the current neuron after activation
+			# this is just what value the neuron takes on after using the activation function on its input
 			output = self._layers[-1].neurons()[i].value
 
+			# error derivative with respect with the output of the neuron
 			dEdout = output - target[i]
+			# output derivative with respect to the input to the neuron
 			doutdnet = output * (1 - output)
+			# error derivative with respect to the input
 			dEdnet = dEdout * doutdnet
 
 			previous_derivatives.append(dEdnet)
 
+		# loop through the layers, starting with the layer before the output layer, and going backwards from there
 		for i in range(len(self._layers) - 2, -1, -1):
+			# all of the weight adjustments for each neuron
 			neuron_changes = []
 
+			# loop through all of the neurons in the current layer
+			# doesn't handle biases
 			for j in range(len(self._layers[i].neurons())):
+				# all of the weight updates for the current neuron
 				weight_updates = []
 
+				# loop through all of the weights in the neuron
 				for k in range(len(self._layers[i].neurons()[j].weights())):
+					# derivative of the input to the previous neuron with respect to the weight
+					# this is just what value the neuron takes on after using the activation function on its input
 					dnetdw = self._layers[i].neurons()[j].value
+					# error derivative with respect to the weight
 					dEdw = previous_derivatives[k] * dnetdw
 
+					# add the weight change scaled by the learning rate
 					weight_updates.append(learning_rate * dEdw)
 
 				neuron_changes.append(weight_updates)
 
+			# this is where the bias weight updates are calculated
+			# updates to the bias weights for the layer
 			bias_updates = []
 
+			# loop through all of the weights in the bias
 			for j in range(len(self._layers[i].bias().weights())):
+				# derivative of the input to the previous neuron with respect to the weight of the bias
 				dnetdw = self._layers[i].bias().value
+				# error derivative with respect to the weight of the bias
 				dEdw = previous_derivatives[j] * dnetdw
 
+				# add the weight change scaled by the learning rate
 				bias_updates.append(learning_rate * dEdw)
 
 			neuron_changes.append(bias_updates)
 
+			# this is where the "previous_derivatives" list gets updated to prepare for the calculations in the next layer
+			# new derivatives of the error with respect to the net input to every neuron in the layer before
 			derivatives = []
 
+			# loop through all of layers
 			for j in range(len(self._layers[i].neurons())):
+				# list of error derivatives with respect to the output of the current neuron
 				dEdout_arr = []
 
+				# loop through all of the "previous_derivatives" because each new value is based on the previous ones
 				for k in range(len(previous_derivatives)):
+					# previous_derivatives[k] is the derivate of the error with respect to the input to the previous neuron
+					# self._layers[i].neurons()[j].weights()[k] is the derivative of the input to the previous neuron with respect to the output of the current one
+					# multiplying them give us the derivative of the error with respect to the output of the current neuron
 					dEdout_arr.append(previous_derivatives[k] * self._layers[i].neurons()[j].weights()[k])
 
+				# get the output of the current neuron after activation
+				# this is just what value the neuron takes on after using the activation function on its input
 				output = self._layers[i].neurons()[j].value
 
+				# sum of the derivatives calculated before
 				dEdout = sum(dEdout_arr)
+				# derivative of the output of the current neuron with respect to its input
+				# so the derivative of the activation function
 				doutdnet = output * (1 - output)
+				# derivative of the error with respect to the net input of the current neuron
 				dEdnet = dEdout * doutdnet
 
+				# save it!
 				derivatives.append(dEdnet)
 
+			# update the previous derivatives to prepare for the calculations in the next layer
 			previous_derivatives = derivatives
 
+			# save the changes for this layer
 			layer_changes.append(neuron_changes)
 
+		# we have to reverse the list since we iterated through the layers backwards
+		# so all of the changes are saved starting with the last
 		layer_changes.reverse()
 
+		# return the layer changes for updating depending on the type of learning (full-batch, mini-batch, stochastic)
 		return layer_changes
 
 	def _update_layers(self, layer_changes):

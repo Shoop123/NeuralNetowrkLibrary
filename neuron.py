@@ -3,7 +3,6 @@ import math
 class Neuron():
 	_FUNCTIONS = (			#range
 		'identity',			#(-inf, inf)
-		'binary_step',		#[0, 1]
 		'logistic',			#(0, 1)
 		'tanh',				#(-1, 1)
 		'arctan'			#(-pi/2, pi/2)
@@ -24,11 +23,6 @@ class Neuron():
 
 		if self._function == 'identity':
 			value = local_input
-		elif self._function == 'binary_step':
-			if local_input < 0:
-				value = 0
-			else:
-				value = 1
 		elif self._function == 'logistic':
 			value = 1 / (1 + math.exp(-local_input))
 		elif self._function == 'tanh':

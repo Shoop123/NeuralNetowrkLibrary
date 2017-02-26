@@ -5,7 +5,9 @@ from neural_net import NeuralNetwork
 
 # Create a nerual net with 2 inputs, 2 hidden neurons, and one output neuron. 
 # The hidden and output neurons will use the logistic activation function
-net = NeuralNetwork([2, 2, 1])
+net = NeuralNetwork([2, 2, 2])
+
+net._layers[0].neurons()[0]
 
 # Training dataset
 train = [[(1, 0)], [(0, 1)], [(0, 0)], [(1, 1)]]
