@@ -22,7 +22,7 @@ class NeuralNetwork():
 
 		self._layers += hidden_layers
 
-		output_layer = self._create_output(neurons_per_layer[-1], 'identity')
+		output_layer = self._create_output(neurons_per_layer[-1], function)
 
 		self._layers.append(output_layer)
 
@@ -55,13 +55,13 @@ class NeuralNetwork():
 
 			for j in range(hidden_neurons_per_layer[i]):
 				connection_weights = self._create_weights(connections)
-				hidden_neuron = Neuron(connection_weights, neuron_activation_function, j + 1, i + 1)
+				hidden_neuron = Neuron(connection_weights, neuron_activation_function, j + 1, i + 2)
 				neurons.append(hidden_neuron)
 
 			connection_weights = self._create_weights(connections)
-			bias = Neuron(connection_weights, 'identity', hidden_neurons_per_layer[i] + 1, i + 1)
+			bias = Neuron(connection_weights, 'identity', hidden_neurons_per_layer[i] + 1, i + 2)
 
-			layer = Layer(neurons, bias, i + 1)
+			layer = Layer(neurons, bias, i + 2)
 
 			layers.append(layer)
 
@@ -310,7 +310,7 @@ class NeuralNetwork():
 			if l == 0:
 				file.write('\n-------------Input Layer-------------\n')
 			elif l < len(self._layers) - 1:
-				file.write('\n-------------Layer ' + str(l) + '-------------\n')
+				file.write('\n-------------Hidden Layer ' + str(l) + '-------------\n')
 			else:
 				file.write('\n-------------Output Layer-------------\n')
 
