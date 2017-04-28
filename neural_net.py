@@ -202,11 +202,11 @@ class NeuralNetwork():
 			# get the output of the current neuron after activation
 			# this is just what value the neuron takes on after using the activation function on its input
 			output = self._layers[-1].neurons()[i].value
-
+			
 			# error derivative with respect with the output of the neuron
 			dEdout = output - target[i]
 			# output derivative with respect to the input to the neuron
-			doutdnet = output * (1 - output)
+			doutdnet = self._layers[-1].neurons()[i].derivative()
 			# error derivative with respect to the input
 			dEdnet = dEdout * doutdnet
 
@@ -268,15 +268,11 @@ class NeuralNetwork():
 					# multiplying them give us the derivative of the error with respect to the output of the current neuron
 					dEdout_arr.append(previous_derivatives[k] * self._layers[i].neurons()[j].weights()[k])
 
-				# get the output of the current neuron after activation
-				# this is just what value the neuron takes on after using the activation function on its input
-				output = self._layers[i].neurons()[j].value
-
 				# sum of the derivatives calculated before
 				dEdout = sum(dEdout_arr)
 				# derivative of the output of the current neuron with respect to its input
 				# so the derivative of the activation function
-				doutdnet = output * (1 - output)
+				doutdnet = self._layers[i].neurons()[j].derivative()
 				# derivative of the error with respect to the net input of the current neuron
 				dEdnet = dEdout * doutdnet
 

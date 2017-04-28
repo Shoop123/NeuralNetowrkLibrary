@@ -4,8 +4,6 @@ class Neuron():
 	_FUNCTIONS = (			#range
 		'identity',			#(-inf, inf)
 		'logistic',			#(0, 1)
-		'tanh',				#(-1, 1)
-		'arctan'			#(-pi/2, pi/2)
 	)
 
 	def __init__(self, weights, function, neuron_index, layer_index):
@@ -17,27 +15,58 @@ class Neuron():
 		self._weights = weights
 		self._function = function
 		self._name = 'Layer ' + str(layer_index) + ' Neuron ' + str(neuron_index)
+		self._activated = False
 
 	def activate(self, local_input):
 		outputs = []
 
-		if self._function == 'identity':
-			value = local_input
-		elif self._function == 'logistic':
-			value = 1 / (1 + math.exp(-local_input))
-		elif self._function == 'tanh':
-			value = (2 / (1 + math.exp(-2 * local_input))) - 1
-		elif self._function == 'arctan':
-			value = math.atan(local_input)		
-
-		self.value = value
+		self.value = self._run_function(local_input)
 
 		for weight in self._weights:
-			outputs.append(value * weight)
+			outputs.append(self.value * weight)
 
 		self.output = outputs
 
+		self._activated = True
+
 		return outputs
+
+	def derivative(self):
+		if self._activated:
+			derivative = self._run_function(self.value, derivative=True)
+		else:
+			derivative = 0
+
+		return derivative
+
+	def _run_function(self, local_input, derivative=False):
+		if self._function == 'identity':
+			value = self._identity(local_input, derivative)
+		elif self._function == 'logistic':
+			value = self._sigmoid(local_input, derivative)
+
+		return value
+
+	def _identity(self, local_input, derivative):
+		if not derivative:
+			value = local_input
+		else:
+			value = 1.
+
+		return value
+
+	def _sigmoid(self, local_input, derivative):
+		if not derivative:
+			try:
+				exp = math.exp(-local_input)
+			except OverflowError:
+				exp = float('inf')
+
+			value = 1 / (1 + exp)
+		else:
+			value = self._sigmoid(local_input, False) * (1 - self._sigmoid(local_input, False))
+
+		return value
 
 	def weights(self):
 		return self._weights

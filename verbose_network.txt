@@ -3,25 +3,25 @@ Neurons per layer: [2, 2, 2]
 
 -------------Input Layer-------------
 	Neuron 1
-		Weight 1: 0.149780716133
-		Weight 2: 0.249751143632
+		Weight 1: 0.149764287267
+		Weight 2: 0.249731743465
 	Neuron 2
-		Weight 1: 0.199561432266
-		Weight 2: 0.299502287265
+		Weight 1: 0.199528574535
+		Weight 2: 0.29946348693
 	Bias
-		Weight 1: 0.345614322655
-		Weight 2: 0.345022872647
+		Weight 1: 0.345285745346
+		Weight 2: 0.344634869305
 
 -------------Hidden Layer 1-------------
 	Neuron 1
-		Weight 1: 0.358916479718
-		Weight 2: 0.511301270239
+		Weight 1: 0.352105115229
+		Weight 2: 0.513914079677
 	Neuron 2
-		Weight 1: 0.408666186076
-		Weight 2: 0.561370121108
+		Weight 1: 0.401813324627
+		Weight 2: 0.563998848598
 	Bias
-		Weight 1: 0.530750719186
-		Weight 2: 0.619049118258
+		Weight 1: 0.519269665737
+		Weight 2: 0.623453199829
 
 -------------Output Layer-------------
 	Neuron 1
